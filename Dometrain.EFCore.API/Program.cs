@@ -21,59 +21,21 @@ builder.Services.AddDbContext<UserContext>(opt =>
 var app = builder.Build();
 // DIRTY HACK, we WILL come back to fix this
 var scope = app.Services.CreateScope();
-var context = scope.ServiceProvider.GetRequiredService<UserContext>();
-context.Database.EnsureDeleted();
-context.Database.EnsureCreated();
-
-if (!context.LookupTypes.Any())
+//var context = scope.ServiceProvider.GetRequiredService<UserContext>();
+//context.Database.EnsureDeleted();
+//context.Database.EnsureCreated();
+try
 {
-	var genderType = new LookupType
-	{
-		TypeName = "Gender",
-		Description = "Gender identity options"
-	};
-
-
-	context.LookupTypes.AddRange(genderType);
-	context.SaveChanges();
-
-	var lookupValues = new List<Lookup>
-	{
-        // Gender options
-        new Lookup
-		{
-			LookupTypeId = genderType.Id,
-			Name = "Male",
-			Description = "Male gender",
-			SortOrder = 1
-		},
-		new Lookup
-		{
-			LookupTypeId = genderType.Id,
-			Name = "Female",
-			Description = "Female gender",
-			SortOrder = 2
-		},
-		new Lookup
-		{
-			LookupTypeId = genderType.Id,
-			Name = "Non-binary",
-			Description = "Non-binary gender identity",
-			SortOrder = 3
-		},
-		new Lookup
-		{
-			LookupTypeId = genderType.Id,
-			Name = "Prefer not to say",
-			Description = "Option to not disclose gender",
-			SortOrder = 4
-		}
-	};
-
-	context.Lookups.AddRange(lookupValues);
-	context.SaveChanges();
+	var context = scope.ServiceProvider.GetRequiredService<UserContext>();
+	context.Database.EnsureDeleted();
+	context.Database.EnsureCreated();
+	SeedDB.Seed(context);
 }
-
+catch (Exception ex)
+{
+	var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+	logger.LogError(ex, "An error occurred while seeding the database.");
+}
 
 
 // Configure the HTTP request pipeline.
